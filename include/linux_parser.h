@@ -19,6 +19,8 @@ const std::string kOSPath{"/etc/os-release"};
 const std::string kPasswordPath{"/etc/passwd"};
 
 // System
+
+std::string FindLineInStream ( std::string FilePath, std::string StringToBeFound);
 float MemoryUtilization();
 long UpTime();
 std::vector<int> Pids();
@@ -26,6 +28,8 @@ int TotalProcesses();
 int RunningProcesses();
 std::string OperatingSystem();
 std::string Kernel();
+
+
 
 // CPU
 enum CPUStates {
