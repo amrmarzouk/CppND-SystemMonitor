@@ -81,7 +81,7 @@ float LinuxParser::MemoryUtilization() {
   float MemTotal = stof (FindLineInStream (FilePath, "MemTotal:"));
   float MemFree = stof (FindLineInStream (FilePath, "MemFree:"));
 
-  return (((MemTotal-MemFree)/MemTotal));    // return Mem Utilization
+  return (((MemTotal-MemFree)/MemTotal));    // teet return Mem Utilization
 }
 
 // TODO: Read and return the system uptime
