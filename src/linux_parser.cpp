@@ -112,7 +112,9 @@ long LinuxParser::ActiveJiffies() { return 0; }
 long LinuxParser::IdleJiffies() { return 0; }
 
 // TODO: Read and return CPU utilization
-vector<string> LinuxParser::CpuUtilization() { return {}; }
+vector<string> LinuxParser::CpuUtilization() { 
+  return {}; 
+}
 
 // TODO: Read and return the total number of processes
 int LinuxParser::TotalProcesses() { 
@@ -146,8 +148,6 @@ string LinuxParser::FindLineInStream (string FilePath, string StringToBeFound){
 int LinuxParser::RunningProcesses() {   
   std::string FilePath = kProcDirectory+kStatFilename;
   string MyStr = FindLineInStream (FilePath, "procs_running");
-  std::cout << MyStr << "\r\n";
-  
   return (stoi(MyStr)); // return Number of Running Processes
 }
 
