@@ -9,8 +9,6 @@ float Processor::Utilization() {
     std::string line;
     std::string title;
     
-    
-
     if (stream.is_open()) {
             std::getline(stream, line);
             std::istringstream linestream(line);

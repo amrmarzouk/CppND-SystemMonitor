@@ -51,7 +51,7 @@ string LinuxParser::Kernel() {
     std::istringstream linestream(line);
     linestream >> os >> kernel >> ver;
   }
-  return ver;
+  return ver; 
 }
 
 // BONUS: Update this to use std::filesystem
@@ -141,6 +141,7 @@ string LinuxParser::FindLineInStream (string FilePath, string StringToBeFound){
       }
     }
   }
+  stream.close(); // Close the input file stream
   return ExtractedString;
 }
 
@@ -161,11 +162,36 @@ string LinuxParser::Ram(int pid[[maybe_unused]]) { return string(); }
 
 // TODO: Read and return the user ID associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Uid(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::Uid(int pid) { 
+
+  std::string FilePath = kProcDirectory+to_string(pid)+kStatusFilename;
+  string MyStr = FindLineInStream (FilePath, "Uid:");
+  
+  return MyStr; 
+}
 
 // TODO: Read and return the user associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::User(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::User(int pid) { 
+
+  std::ifstream stream(kPasswordPath);
+  string line;
+  string userID;
+  string uid;
+  if (stream.is_open()) { 
+    while (std::getline(stream, line)) { 
+        std::istringstream linestream(line);
+        std::getline(linestream, userID,':');
+        std::getline(linestream, uid,':');
+        std::getline(linestream, uid,':');
+        if(LinuxParser::Uid(pid)==uid){
+           // found the Uid, exit loop and return the userID
+           return userID;
+        }
+      }
+    }
+}
+
 
 // TODO: Read and return the uptime of a process
 // REMOVE: [[maybe_unused]] once you define the function
