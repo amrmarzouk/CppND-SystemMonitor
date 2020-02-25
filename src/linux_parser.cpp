@@ -103,16 +103,133 @@ long LinuxParser::Jiffies() { return 0; }
 
 // TODO: Read and return the number of active jiffies for a PID
 // REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) { return 0; }
+long LinuxParser::ActiveJiffies(int pid) { 
+
+  std::ifstream stream(LinuxParser::kProcDirectory +
+                       to_string(pid) + 
+                       LinuxParser::kStatFilename);  // /proc/[PID]/stat
+  string value;    
+  long utime; // #14 utime - CPU time spent in user code, measured in clock ticks
+  long stime; // #15 stime - CPU time spent in kernel code, measured in clock ticks
+  long cutime; // #16 cutime - Waited-for children's CPU time spent in user code (in clock ticks)
+  long cstime; // #17 cstime - Waited-for children's CPU time spent in kernel code (in clock ticks)
+
+  if (stream.is_open()) { 
+    for(int i=1;i<23;i++){
+        std::getline(stream, value,' ');  
+        switch(i){
+          case 14: utime=stol(value);  std::cout<< utime; break;
+          case 15: stime=stol(value); break;
+          case 16: cutime=stol(value); break;
+          case 17: cstime=stol(value); break;
+          default: break;
+        }
+    }
+  }  
+  long int totalTime = utime + stime;
+  totalTime += cutime + cstime;
+
+  return totalTime;
+}
 
 // TODO: Read and return the number of active jiffies for the system
-long LinuxParser::ActiveJiffies() { return 0; }
+// NOTE: This is repeated from processor.cpp to be used for a specific process 
+//       not for the aggregate CPU Utilization
+long LinuxParser::ActiveJiffies() { 
+  long  UserJeffies_{0},
+        NiceJeffies{0},
+        SystemJeffies_{0},
+        IdleJeffies_ {0},
+        IowaitJeffies{0},
+        IrqJeffies_{0},
+        SoftirqJeffies_{0},
+        StealJeffies_{0};
+
+  std::string line;
+  std::string DeleteMe;
+
+  std::ifstream fstream(LinuxParser::kProcDirectory +
+                           LinuxParser::kStatFilename);
+
+  std::getline(fstream, line);
+  std::istringstream linestream(line);
+  linestream >>  DeleteMe>> 
+                 UserJeffies_ >> 
+                 NiceJeffies>>
+                 SystemJeffies_>>
+                 IdleJeffies_>>
+                 IowaitJeffies>>
+                 IrqJeffies_>>
+                 SoftirqJeffies_>>
+                 StealJeffies_;
+  return (UserJeffies_+
+          NiceJeffies+
+          SystemJeffies_+
+          IdleJeffies_+
+          IowaitJeffies+
+          IrqJeffies_+
+          SoftirqJeffies_+
+          StealJeffies_);   
+}
 
 // TODO: Read and return the number of idle jiffies for the system
-long LinuxParser::IdleJiffies() { return 0; }
+long LinuxParser::IdleJiffies() {   
+  
+  long  IdleJeffies_ {0},
+        IowaitJeffies{0};
+
+  std::string line;
+  std::string DeleteMe;
+
+  std::ifstream fstream(LinuxParser::kProcDirectory +
+                           LinuxParser::kStatFilename);
+
+  std::getline(fstream, line);
+  std::istringstream linestream(line);
+  linestream >>  DeleteMe >> 
+                 DeleteMe >> 
+                 DeleteMe  >> 
+                 DeleteMe  >> 
+                 IdleJeffies_>>
+                 IowaitJeffies;
+
+  return (IdleJeffies_+
+          IowaitJeffies);
+}
 
 // TODO: Read and return CPU utilization
 vector<string> LinuxParser::CpuUtilization() { 
+//=======================================================================
+// https://stackoverflow.com/questions/16726779/how-do-i-get-the-total-cpu-usage-of-an-application-from-proc-pid-stat/16736599#16736599
+
+// --- Preparations To calculate CPU usage for a specific process you'll need the following:
+// -    /proc/uptime
+//         #1 uptime of the system (seconds) (DONE in LinuxParser::UpTime())
+// -    /proc/[PID]/stat
+//         #14 utime - CPU time spent in user code, measured in clock ticks
+//         #15 stime - CPU time spent in kernel code, measured in clock ticks
+//         #16 cutime - Waited-for children's CPU time spent in user code (in clock ticks)
+//         #17 cstime - Waited-for children's CPU time spent in kernel code (in clock ticks)
+//         #22 starttime - Time when the process started, measured in clock ticks
+// -   Hertz (number of clock ticks per second) of your system.
+//         In most cases, getconf CLK_TCK can be used to return the number of clock ticks.
+//         The sysconf(_SC_CLK_TCK) C function call may also be used to return the hertz value.
+
+// --- Calculation
+// 1. First we determine the total time spent for the process:
+//     total_time = utime + stime
+
+// 2. We also have to decide whether we want to include the time from children processes. If we do, then we add those values to total_time:
+//     total_time = total_time + cutime + cstime
+
+// 3. Next we get the total elapsed time in seconds since the process started:
+//     seconds = uptime - (starttime / Hertz)
+
+// 4. Finally we calculate the CPU usage percentage:
+//     cpu_usage = 100 * ((total_time / Hertz) / seconds)
+//=======================================================================
+  
+  
   return {}; 
 }
 
@@ -163,11 +280,9 @@ string LinuxParser::Ram(int pid[[maybe_unused]]) { return string(); }
 // TODO: Read and return the user ID associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
 string LinuxParser::Uid(int pid) { 
-
   std::string FilePath = kProcDirectory+to_string(pid)+kStatusFilename;
-  string MyStr = FindLineInStream (FilePath, "Uid:");
-  
-  return MyStr; 
+  string Uid = FindLineInStream (FilePath, "Uid:");
+  return Uid; 
 }
 
 // TODO: Read and return the user associated with a process
@@ -190,6 +305,7 @@ string LinuxParser::User(int pid) {
         }
       }
     }
+   return "Not FOUND"; // Didn't find the Uid
 }
 
 
