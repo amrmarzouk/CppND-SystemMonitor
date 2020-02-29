@@ -69,6 +69,7 @@ vector<int> LinuxParser::Pids() {
         pids.push_back(pid);
       }
     }
+
   }
   closedir(directory);
   return pids;
@@ -99,7 +100,9 @@ long LinuxParser::UpTime() {
 }
 
 // TODO: Read and return the number of jiffies for the system
-long LinuxParser::Jiffies() { return 0; }
+long LinuxParser::Jiffies() { 
+  return ActiveJiffies() + IdleJiffies(); 
+}
 
 // TODO: Read and return the number of active jiffies for a PID
 // REMOVE: [[maybe_unused]] once you define the function
@@ -197,40 +200,57 @@ long LinuxParser::IdleJiffies() {
           IowaitJeffies);
 }
 
-// TODO: Read and return CPU utilization
+// TODO: Read and return Aggregate CPU utilization
 vector<string> LinuxParser::CpuUtilization() { 
-//=======================================================================
-// https://stackoverflow.com/questions/16726779/how-do-i-get-the-total-cpu-usage-of-an-application-from-proc-pid-stat/16736599#16736599
-
-// --- Preparations To calculate CPU usage for a specific process you'll need the following:
-// -    /proc/uptime
-//         #1 uptime of the system (seconds) (DONE in LinuxParser::UpTime())
-// -    /proc/[PID]/stat
-//         #14 utime - CPU time spent in user code, measured in clock ticks
-//         #15 stime - CPU time spent in kernel code, measured in clock ticks
-//         #16 cutime - Waited-for children's CPU time spent in user code (in clock ticks)
-//         #17 cstime - Waited-for children's CPU time spent in kernel code (in clock ticks)
-//         #22 starttime - Time when the process started, measured in clock ticks
-// -   Hertz (number of clock ticks per second) of your system.
-//         In most cases, getconf CLK_TCK can be used to return the number of clock ticks.
-//         The sysconf(_SC_CLK_TCK) C function call may also be used to return the hertz value.
-
-// --- Calculation
-// 1. First we determine the total time spent for the process:
-//     total_time = utime + stime
-
-// 2. We also have to decide whether we want to include the time from children processes. If we do, then we add those values to total_time:
-//     total_time = total_time + cutime + cstime
-
-// 3. Next we get the total elapsed time in seconds since the process started:
-//     seconds = uptime - (starttime / Hertz)
-
-// 4. Finally we calculate the CPU usage percentage:
-//     cpu_usage = 100 * ((total_time / Hertz) / seconds)
-//=======================================================================
+ 
+  std::string FilePath = LinuxParser::kProcDirectory+LinuxParser::kStatFilename;
+  std::ifstream stream(FilePath);
+  std::string line;
+  std::string title;
   
+  vector<string> MyCPUStates{};
   
-  return {}; 
+
+
+  if (stream.is_open()){
+    std::getline(stream, line);
+    std::istringstream linestream(line);
+
+    std::string UserJefs,
+                NiceJefs,
+                SystemJefs,
+                IdleJefs, 
+                IOwaitJefs,
+                IRQJefs,
+                SoftIRQJefs,
+                StealJefs,
+                GuestJefs;
+
+    linestream >> title 
+               >> UserJefs
+               >> NiceJefs
+               >> SystemJefs
+               >> IdleJefs
+               >> IOwaitJefs
+               >> IRQJefs
+               >> SoftIRQJefs
+               >> StealJefs
+               >> GuestJefs;
+
+    // I am not sure how to combine the following commands with the prev chunk
+    MyCPUStates.push_back(UserJefs);
+    MyCPUStates.push_back(NiceJefs);
+    MyCPUStates.push_back(SystemJefs);
+    MyCPUStates.push_back(IdleJefs);
+    MyCPUStates.push_back(IOwaitJefs);
+    MyCPUStates.push_back(IRQJefs);
+    MyCPUStates.push_back(SoftIRQJefs);
+    MyCPUStates.push_back(StealJefs);
+    MyCPUStates.push_back(GuestJefs);
+  }
+  stream.close();
+
+  return MyCPUStates;
 }
 
 // TODO: Read and return the total number of processes
