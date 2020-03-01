@@ -13,8 +13,8 @@ class Process {
  public:
   Process(int pid){
     pid_=pid;
-     cpu_util = Process::CpuUtilization();
-     } 
+    cpu_util = Process::CpuUtilization();
+  } 
   int Pid();                               // TODO: See src/process.cpp
 
   std::string User();                      // TODO: See src/process.cpp
@@ -27,7 +27,7 @@ class Process {
   // TODO: Declare any necessary private members
  private:
   int pid_;  
-  float cpu_util{0.0};
+  float cpu_util;
 };
 
 #endif

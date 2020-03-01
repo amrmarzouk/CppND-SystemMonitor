@@ -29,7 +29,6 @@ float Processor::Utilization() {
     float StealJeffies_=std::stof(CPUStates[LinuxParser::CPUStates::kSteal_]);
     // float GuestJeffies_=std::stof(CPUStates[LinuxParser::CPUStates::kGuest_]);
     
-    
     float PrevUserJeffies_{0},
           PrevNiceJeffies_{0},
           PrevSystemJeffies_{0},
