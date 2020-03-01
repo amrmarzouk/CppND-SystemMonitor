@@ -121,7 +121,7 @@ long LinuxParser::ActiveJiffies(int pid) {
     for(int i=1;i<23;i++){
         std::getline(stream, value,' ');  
         switch(i){
-          case 14: utime=stol(value);  std::cout<< utime; break;
+          case 14: utime=stol(value);  break;
           case 15: stime=stol(value); break;
           case 16: cutime=stol(value); break;
           case 17: cstime=stol(value); break;
@@ -209,8 +209,6 @@ vector<string> LinuxParser::CpuUtilization() {
   std::string title;
   
   vector<string> MyCPUStates{};
-  
-
 
   if (stream.is_open()){
     std::getline(stream, line);
@@ -253,6 +251,7 @@ vector<string> LinuxParser::CpuUtilization() {
   return MyCPUStates;
 }
 
+
 // TODO: Read and return the total number of processes
 int LinuxParser::TotalProcesses() { 
   std::string FilePath = kProcDirectory+kStatFilename;
@@ -289,13 +288,70 @@ int LinuxParser::RunningProcesses() {
   return (stoi(MyStr)); // return Number of Running Processes
 }
 
+
+// CPU Utilization for a specific process
+float LinuxParser::CpuUtilization(int pid) {
+
+  std::ifstream stream(LinuxParser::kProcDirectory +
+                      to_string(pid) + 
+                      LinuxParser::kStatFilename);  // /proc/[PID]/stat
+  string value;    
+  long utime; // #14 utime - CPU time spent in user code, measured in clock ticks
+  long stime; // #15 stime - CPU time spent in kernel code, measured in clock ticks
+  long cutime; // #16 cutime - Waited-for children's CPU time spent in user code (in clock ticks)
+  long cstime; // #17 cstime - Waited-for children's CPU time spent in kernel code (in clock ticks)
+
+  if (stream.is_open()) { 
+  for(int i=1;i<23;i++){
+      std::getline(stream, value,' ');  
+      switch(i){
+        case 14: utime=stol(value);  break;
+        case 15: stime=stol(value); break;
+        case 16: cutime=stol(value); break;
+        case 17: cstime=stol(value); break;
+        default: break;
+      }
+  }
+  }  
+  long int totalTime = utime + stime;
+  totalTime += cutime + cstime;
+
+  long Hertz = sysconf(_SC_CLK_TCK);  
+  long starttime = LinuxParser::UpTime(pid);
+  
+  long uptime = LinuxParser::UpTime();
+
+  long seconds = (uptime - starttime) / Hertz;
+  float cpu_usage = (float)((totalTime / Hertz) / seconds);
+
+  return cpu_usage;  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+}
+
+
+
 // TODO: Read and return the command associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Command(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::Command(int pid) { 
+  
+  std::string FilePath = kProcDirectory + to_string(pid) + kCmdlineFilename;
+  std::ifstream filestream(FilePath);
+  
+  string str;
+  if (filestream.is_open()) {
+    filestream >> str;
+  }
+  filestream.close();
+  return str;
+}
 
 // TODO: Read and return the memory used by a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Ram(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::Ram(int pid) { 
+  std::string FilePath = kProcDirectory+to_string(pid)+kStatusFilename;
+  string MyStr = FindLineInStream (FilePath, "VmSize:");
+  long VmSize = stol(MyStr)/1000;
+  return (to_string(VmSize)); // return Process VmSize in MB
+}
 
 // TODO: Read and return the user ID associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
@@ -328,7 +384,26 @@ string LinuxParser::User(int pid) {
    return "Not FOUND"; // Didn't find the Uid
 }
 
-
 // TODO: Read and return the uptime of a process
 // REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::UpTime(int pid[[maybe_unused]]) { return 0; }
+long LinuxParser::UpTime(int pid) { 
+
+// http://man7.org/linux/man-pages/man5/proc.5.html
+// Process uptime is number 22 in /proc/[PID]/stat
+
+  std::string FilePath = kProcDirectory+to_string(pid)+kStatFilename;
+  std::ifstream stream(FilePath);
+
+  long proc_uptime = 0;
+  if (stream.is_open()) {
+    string str{""};
+    for (unsigned i = 0; i < 22; i++){
+      stream >> str;
+    }
+    stream.close();
+    proc_uptime = std::stol(str);
+  }
+
+  return proc_uptime; // divide by sysconf(_SC_CLK_TCK) to get seconds
+  
+}
