@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 
+#include <unistd.h> //<<<<<<<<<<<<<<<<<<<<<<
+
 #include "processor.h"
 #include "linux_parser.h"
 
@@ -13,10 +15,7 @@ using std::vector;
 
 // TODO: Return the aggregate CPU utilization
 float Processor::Utilization() { 
-
-    // This line generates Seg fault
     vector<string> CPUStates = LinuxParser::CpuUtilization();
-
 
     float UserJeffies_=std::stof(CPUStates[LinuxParser::CPUStates::kUser_]);
     float NiceJeffies_=std::stof(CPUStates[LinuxParser::CPUStates::kNice_]);
@@ -27,7 +26,7 @@ float Processor::Utilization() {
     float IrqJeffies_=std::stof(CPUStates[LinuxParser::CPUStates::kIRQ_]);
     float SoftirqJeffies_=std::stof(CPUStates[LinuxParser::CPUStates::kSoftIRQ_]);
     float StealJeffies_=std::stof(CPUStates[LinuxParser::CPUStates::kSteal_]);
-    // float GuestJeffies_=std::stof(CPUStates[LinuxParser::CPUStates::kGuest_]);
+    // float GuestJeffies_=std::stof(CPUStates[LinuxParser::CPUStates::kGuest_]); // Not Used
     
     float PrevUserJeffies_{0},
           PrevNiceJeffies_{0},
@@ -37,12 +36,12 @@ float Processor::Utilization() {
           PrevIrqJeffies_{0},
           PrevSoftirqJeffies_{0},
           PrevStealJeffies_{0},
-        //   PrevGuestJeffies_{0},
+        //   PrevGuestJeffies_{0},   // Not Used
           NonIdleJeffies_{0}, PrevNonIdleJeffies_{0},
           TotalJeffies_{0}, PrevTotalJeffies_{0},
           TotalDiffJeffies_{0}, 
           IdleDiffJeffies_ {0};
-        // std::cout << "system_time:" << system_time << "\r\n";
+
 
     // PrevIdle = previdle + previowait
     PrevIdleJeffies_= PrevIdleJeffies_ + PrevIowaitJeffies_;
@@ -77,7 +76,6 @@ float Processor::Utilization() {
     TotalDiffJeffies_ = TotalJeffies_ - PrevTotalJeffies_;
 
     // idled = Idle - PrevIdle
-
     IdleDiffJeffies_ = IdleJeffies_ - PrevIdleJeffies_;
 
     PrevUserJeffies_= UserJeffies_;
@@ -88,7 +86,7 @@ float Processor::Utilization() {
     PrevIrqJeffies_= IrqJeffies_;
     PrevSoftirqJeffies_= SoftirqJeffies_;
     PrevStealJeffies_= StealJeffies_;
-    // PrevGuestJeffies_= GuestJeffies_;
+    // PrevGuestJeffies_= GuestJeffies_;   // Not Used
     PrevNonIdleJeffies_= NonIdleJeffies_;
     PrevTotalJeffies_=  TotalJeffies_;
 

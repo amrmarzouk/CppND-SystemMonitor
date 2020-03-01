@@ -78,7 +78,6 @@ vector<int> LinuxParser::Pids() {
 // TODO: Read and return the system memory utilization 
 float LinuxParser::MemoryUtilization() { 
   std::string FilePath = kProcDirectory+kMeminfoFilename;
-  
   float MemTotal = stof (FindLineInStream (FilePath, "MemTotal:"));
   float MemFree = stof (FindLineInStream (FilePath, "MemFree:"));
 
@@ -95,7 +94,6 @@ long LinuxParser::UpTime() {
     std::istringstream linestream(line);
     linestream >> UpTimeSec;
   }
-  //std::cout << (std::stol(UpTimeSec));
   return (std::stol(UpTimeSec)); 
 }
 
@@ -105,9 +103,7 @@ long LinuxParser::Jiffies() {
 }
 
 // TODO: Read and return the number of active jiffies for a PID
-// REMOVE: [[maybe_unused]] once you define the function
 long LinuxParser::ActiveJiffies(int pid) { 
-
   std::ifstream stream(LinuxParser::kProcDirectory +
                        to_string(pid) + 
                        LinuxParser::kStatFilename);  // /proc/[PID]/stat
@@ -136,8 +132,6 @@ long LinuxParser::ActiveJiffies(int pid) {
 }
 
 // TODO: Read and return the number of active jiffies for the system
-// NOTE: This is repeated from processor.cpp to be used for a specific process 
-//       not for the aggregate CPU Utilization
 long LinuxParser::ActiveJiffies() { 
   long  UserJeffies_{0},
         NiceJeffies{0},
@@ -165,6 +159,7 @@ long LinuxParser::ActiveJiffies() {
                  IrqJeffies_>>
                  SoftirqJeffies_>>
                  StealJeffies_;
+                 
   return (UserJeffies_+
           NiceJeffies+
           SystemJeffies_+
@@ -178,15 +173,10 @@ long LinuxParser::ActiveJiffies() {
 // TODO: Read and return the number of idle jiffies for the system
 long LinuxParser::IdleJiffies() {   
   
-  long  IdleJeffies_ {0},
-        IowaitJeffies{0};
-
+  long  IdleJeffies_ {0}, IowaitJeffies{0};
   std::string line;
   std::string DeleteMe;
-
-  std::ifstream fstream(LinuxParser::kProcDirectory +
-                           LinuxParser::kStatFilename);
-
+  std::ifstream fstream(LinuxParser::kProcDirectory + LinuxParser::kStatFilename);
   std::getline(fstream, line);
   std::istringstream linestream(line);
   linestream >>  DeleteMe >> 
@@ -207,7 +197,6 @@ vector<string> LinuxParser::CpuUtilization() {
   std::ifstream stream(FilePath);
   std::string line;
   std::string title;
-  
   vector<string> MyCPUStates{};
 
   if (stream.is_open()){
@@ -317,7 +306,6 @@ string LinuxParser::Command(int pid) {
 }
 
 // TODO: Read and return the memory used by a process
-// REMOVE: [[maybe_unused]] once you define the function
 string LinuxParser::Ram(int pid) { 
   std::string FilePath = kProcDirectory+to_string(pid)+kStatusFilename;
   string MyStr = FindLineInStream (FilePath, "VmSize:");
@@ -326,7 +314,6 @@ string LinuxParser::Ram(int pid) {
 }
 
 // TODO: Read and return the user ID associated with a process
-// REMOVE: [[maybe_unused]] once you define the function
 string LinuxParser::Uid(int pid) { 
   std::string FilePath = kProcDirectory+to_string(pid)+kStatusFilename;
   string Uid = FindLineInStream (FilePath, "Uid:");
@@ -334,9 +321,7 @@ string LinuxParser::Uid(int pid) {
 }
 
 // TODO: Read and return the user associated with a process
-// REMOVE: [[maybe_unused]] once you define the function
 string LinuxParser::User(int pid) { 
-
   std::ifstream stream(kPasswordPath);
   string line;
   string userID;
@@ -358,10 +343,8 @@ string LinuxParser::User(int pid) {
 
 // TODO: Read and return the uptime of a process
 long LinuxParser::UpTime(int pid) { 
-
-// http://man7.org/linux/man-pages/man5/proc.5.html
-// Process uptime is number 22 in /proc/[PID]/stat
-
+  // http://man7.org/linux/man-pages/man5/proc.5.html
+  // Process uptime is number 22 in /proc/[PID]/stat
   std::string FilePath = kProcDirectory+to_string(pid)+kStatFilename;
   std::ifstream stream(FilePath);
 
@@ -374,7 +357,5 @@ long LinuxParser::UpTime(int pid) {
     stream.close();
     proc_uptime = std::stol(str);
   }
-
-  return proc_uptime/sysconf(_SC_CLK_TCK); // divide by sysconf(_SC_CLK_TCK) to get seconds
-  
+  return proc_uptime/sysconf(_SC_CLK_TCK);   
 }
