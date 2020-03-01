@@ -3,24 +3,46 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "process.h"
 #include "processor.h"
 #include "system.h"
-#include "linux_parser.h"   // AMR
+#include "linux_parser.h"  
 
 using std::set;
 using std::size_t;
 using std::string;
 using std::vector;
 
+
 // TODO: Return the system's CPU
 Processor& System::Cpu() { 
     return cpu_; 
 }
 
+
 // TODO: Return a container composed of the system's processes
-vector<Process>& System::Processes() { return processes_; }
+
+vector<Process>& System::Processes() {
+        
+    vector<int> pidList = LinuxParser::Pids();
+
+    this->processes_.clear();
+    
+    for (unsigned i=0; i<pidList.size();i++){      
+    // for (auto i: pidList){
+        Process Proc(pidList[i]);  
+        processes_.push_back(Proc);
+    }
+    
+     std::sort(processes_.begin(), processes_.end());
+    // std::sort(processes_.begin(), processes_.end(),[](Process& p1, Process& p2){return (p2<p1);}); // FIX THIS
+
+    return processes_;
+}
+
+
 
 // TODO: Return the system's kernel identifier (string)
 std::string System::Kernel() { return LinuxParser::Kernel(); }
